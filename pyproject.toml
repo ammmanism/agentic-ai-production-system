@@ -1,0 +1,23 @@
+[project]
+name = "agentic-ai-production-system"
+version = "0.1.0"
+description = "Production-ready agentic RAG system with safety, eval, and observability"
+authors = [{ name = "Your Name", email = "you@example.com" }]
+dependencies = [
+    "fastapi>=0.110",
+    "langgraph>=0.0.20",
+    "langchain>=0.1.0",
+    "qdrant-client>=1.9",
+    "prometheus-client>=0.19",
+    "python-dotenv>=1.0",
+    "pydantic>=2.5",
+    "redis>=5.0",
+    "tiktoken>=0.5",
+]
+
+[project.scripts]
+agent-cli = "entrypoints.cli.agent_cli:main"
+
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
