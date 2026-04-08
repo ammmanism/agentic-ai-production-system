@@ -1,0 +1,55 @@
+```gitignore
+# Python cache
+__pycache__/
+*.pyc
+
+# Virtual environment
+.venv/
+
+# Environment variables
+.env
+
+# Python package build
+*.egg-info/
+dist/
+build/
+
+# Type checking cache
+.mypy_cache/
+
+# Linting cache
+.ruff_cache/
+
+# Logs
+logs/
+*.log
+
+# Jupyter notebook checkpoints
+.ipynb_checkpoints/
+
+# Weights & Biases
+wandb/
+
+# MLflow
+mlruns/
+
+# Pytest cache
+.pytest_cache/
+
+# Coverage reports
+htmlcov/
+
+# macOS
+.DS_Store
+
+# Windows
+Thumbs.db
+
+# Model files
+models/*.bin
+models/*.pt
+models/*.safetensors
+
+# Raw data
+data/raw/
+```
