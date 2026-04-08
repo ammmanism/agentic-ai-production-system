@@ -6,41 +6,24 @@
   "shutdownAction": "stopCompose",
   "customizations": {
     "vscode": {
-      "settings": {
-        "editor.tabSize": 2,
-        "editor.insertSpaces": true,
-        "editor.detectIndentation": false,
-        "files.eol": "\n",
-        "python.formatting.provider": "black",
-        "python.linting.enabled": true,
-        "python.linting.lintOnSave": true,
-        "python.linting.pylintEnabled": true,
-        "python.testing.pytestEnabled": true,
-        "python.testing.unittestEnabled": false
-      },
       "extensions": [
         "ms-python.python",
-        "ms-python.vscode-pylance",
         "ms-toolsai.jupyter",
-        "ms-vscode.remote-containers",
+        "ms-vscode.vscode-js-profile-table",
+        "ms-vscode.vscode-typescript-next",
         "redhat.vscode-yaml",
         "ms-azuretools.vscode-docker"
       ]
     }
   },
+  "settings": {
+    "python.linting.enabled": true,
+    "python.linting.pylintEnabled": true,
+    "python.formatting.provider": "black",
+    "editor.formatOnSave": true,
+    "editor.defaultFormatter": "ms-python.python"
+  },
   "forwardPorts": [8000],
-  "postCreateCommand": "pip install -r requirements.txt",
   "remoteUser": "vscode",
-  "mounts": [
-    "source=${localWorkspaceFolder},target=/workspace,type=bind"
-  ],
-  "runArgs": ["--cap-add=SYS_PTRACE", "--security-opt", "seccomp=unconfined"],
-  "build": {
-    "dockerfile": "Dockerfile",
-    "context": "..",
-    "args": {
-      "VARIANT": "3.9",
-      "NODE_VERSION": "none"
-    }
-  }
+  "postCreateCommand": "pip install -r requirements.txt"
 }
