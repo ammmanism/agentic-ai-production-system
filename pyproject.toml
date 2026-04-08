@@ -1,63 +1,55 @@
-```toml
 [build-system]
 requires = ["hatchling"]
 build-backend = "hatchling.build"
 
 [project]
 name = "agentic-ai-production-system"
-version = "0.1.0"
-description = "Production-grade agentic AI system: LangGraph orchestration, hybrid RAG, safety guardrails (PII/toxicity/injection), RAGAS evaluation, Prometheus + Langfuse observability, Kubernetes deployment with HPA, and human-in-the-loop."
+version = "1.0.0"
+description = "Production-grade agentic AI system"
 authors = [
-    { name = "Your Name", email = "your.email@example.com" }
+    {name = "Your Name", email = "your@email.com"},
 ]
-license = { text = "MIT" }
+license = {file = "LICENSE"}
 requires-python = ">=3.11"
-dependencies = [
-    "langgraph>=0.0.1",
-    "langchain>=0.0.1",
-    "fastapi>=0.95.0",
-    "faiss-cpu>=1.7.4",
-    "redis>=4.5.4",
-    "qdrant-client>=1.1.0",
-    "prometheus-client>=0.16.0",
-    "opentelemetry-api>=1.15.0",
-    "opentelemetry-sdk>=1.15.0",
-    "opentelemetry-exporter-prometheus>=1.15.0",
-    "langfuse>=0.0.1",
-    "docker>=6.0.1",
-    "kubernetes>=26.1.0",
-    "terraform>=1.3.0",
-    "uvicorn>=0.21.1",
-    "python-dotenv>=1.0.0",
-    "pydantic>=1.10.7",
-    "python-multipart>=0.0.6",
-    "ragas>=0.0.1",
-]
+
+[project.dependencies]
+python-dateutil = "^2.8.2"
+langgraph = "^0.2.0"
+langchain = "^0.0.96"
+fastapi = "^0.95.0"
+uvicorn = "^0.20.0"
+faiss-cpu = "^1.7.2"
+redis = "^4.3.4"
+qdrant-client = "^0.10.0"
+prometheus-client = "^0.14.1"
+opentelemetry-api = "^1.10.0"
+opentelemetry-sdk = "^1.10.0"
+langfuse = "^0.1.0"
+docker = "^6.0.0"
+kubernetes = "^24.2.0"
+terraform = "^0.15.0"
 
 [project.optional-dependencies]
 dev = [
-    "ruff>=0.0.261",
-    "mypy>=1.2.0",
-    "types-redis>=4.5.4.1",
-    "types-python-dateutil>=2.8.19.12",
-    "types-pytz>=2023.3.0.0",
-    "types-requests>=2.28.11.12",
-    "types-urllib3>=1.26.25.10",
+    "ruff",
+    "mypy",
+    "pytest",
+    "pytest-asyncio",
+    "coverage[toml]",
+    "pre-commit",
 ]
 test = [
-    "pytest>=7.3.1",
-    "pytest-asyncio>=0.21.0",
-    "pytest-cov>=4.0.0",
-    "httpx>=0.23.3",
+    "pytest",
+    "pytest-asyncio",
+    "coverage[toml]",
 ]
 docs = [
-    "mkdocs>=1.4.2",
-    "mkdocs-material>=9.1.5",
-    "mkdocstrings[python]>=0.20.0",
+    "sphinx",
+    "sphinx-autodoc-typehints",
 ]
 
 [project.scripts]
-agentic-ai-production-system = "agentic_ai_production_system.cli:main"
+agentic-ai = "agentic_ai.main:main"
 
 [tool.ruff]
 line-length = 100
@@ -72,4 +64,6 @@ asyncio_mode = "auto"
 
 [tool.coverage.report]
 fail_under = 80
-```
+
+[tool.hatch.version]
+path = "agentic_ai/__init__.py"
