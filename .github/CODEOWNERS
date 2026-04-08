@@ -1,0 +1,10 @@
+# Global ownership
+* @ammmanism
+
+# Core components
+/src/ @ammmanism
+/orchestration/ @ammmanism
+/rag/ @ammmanism
+/safety/ @ammmanism
+/tests/ @ammmanism
+/.github/ @ammmanism
