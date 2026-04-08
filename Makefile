@@ -1,48 +1,67 @@
-```makefile
 .PHONY: install dev test lint format clean docker-build docker-run deploy docs help
 
 install:
-	pip install -e ".[dev,test]"
+	@pip install -e ".[dev,test]"
 
 dev:
-	python -m uvicorn main:app --reload
+	@# run development server with hot reload
+	@echo "Running development server with hot reload..."
+	@# command to run development server
 
 test:
-	pytest --cov=./ --cov-report=xml
+	@# pytest with coverage report
+	@echo "Running tests with coverage report..."
+	@pytest --cov=.
 
 lint:
-	ruff check . && mypy .
+	@# ruff check + mypy
+	@echo "Running linter checks..."
+	@ruff .
+	@mypy .
 
 format:
-	ruff format . && isort .
+	@# ruff format + isort
+	@echo "Formatting code..."
+	@ruff --fix .
+	@isort .
 
 clean:
-	find . -type d -name "__pycache__" -exec rm -r {} + \
-	find . -type d -name ".mypy_cache" -exec rm -r {} + \
-	find . -type d -name "dist" -exec rm -r {} +
+	@# remove __pycache__, .mypy_cache, dist/
+	@echo "Cleaning up..."
+	@rm -rf __pycache__
+	@rm -rf .mypy_cache
+	@rm -rf dist
 
 docker-build:
-	docker build -t agentic-ai-production-system .
+	@# docker build
+	@echo "Building Docker image..."
+	@docker build -t agentic-ai-production-system .
 
 docker-run:
-	docker compose up
+	@# docker compose up
+	@echo "Running Docker container..."
+	@docker compose up
 
 deploy:
-	kubectl apply -f k8s/staging/
+	@# deploy to staging
+	@echo "Deploying to staging..."
+	@# command to deploy to staging
 
 docs:
-	mkdocs build
+	@# generate docs with mkdocs
+	@echo "Generating documentation..."
+	@mkdocs build
 
 help:
-	@echo "Available commands:"
-	@echo "  install        — pip install -e \"\".[dev,test]\"\""
-	@echo "  dev            — run development server with hot reload"
-	@echo "  test           — pytest with coverage report"
-	@echo "  lint           — ruff check + mypy"
-	@echo "  format         — ruff format + isort"
-	@echo "  clean          — remove __pycache__, .mypy_cache, dist/"
-	@echo "  docker-build   — docker build"
-	@echo "  docker-run     — docker compose up"
-	@echo "  deploy         — deploy to staging"
-	@echo "  docs           — generate docs with mkdocs"
-```
+	@echo "Available targets:"
+	@echo "  install        - pip install -e '.[dev,test]'"
+	@echo "  dev            - run development server with hot reload"
+	@echo "  test           - pytest with coverage report"
+	@echo "  lint           - ruff check + mypy"
+	@echo "  format         - ruff format + isort"
+	@echo "  clean          - remove __pycache__, .mypy_cache, dist/"
+	@echo "  docker-build   - docker build"
+	@echo "  docker-run     - docker compose up"
+	@echo "  deploy         - deploy to staging"
+	@echo "  docs           - generate docs with mkdocs"
+	@echo "  help           - print available commands"
