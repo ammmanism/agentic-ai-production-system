@@ -1,190 +1,138 @@
 ```markdown
 # Contributing to Agentic AI Production System
 
-Thank you for considering contributing to the Agentic AI Production System! We appreciate your interest in making this project better. This document outlines the guidelines and processes for contributing to our project.
+Thank you for considering contributing to our Agentic AI Production System! We appreciate your interest and effort in making this project better. This document outlines the guidelines and standards we expect from all contributors.
 
 ## Code of Conduct
 
-We expect all contributors to adhere to our [Code of Conduct](CODE_OF_CONDUCT.md). Please read it carefully before participating in our community.
+We expect all contributors to adhere to our [Code of Conduct](CODE_OF_CONDUCT.md). By participating, you are expected to uphold this code. Please report unacceptable behavior to [email@example.com](mailto:email@example.com).
 
 ## Development Setup
 
-### Prerequisites
+### Virtual Environment
 
-- Python 3.11
-- Docker
-- Kubernetes (for local development)
-- Terraform (for infrastructure provisioning)
+We recommend using a virtual environment to manage dependencies. You can create one using the following commands:
 
-### Virtual Environment and Dependencies
-
-1. Clone the repository:
-   ```bash
-   git clone https://github.com/your-org/agentic-ai-production-system.git
-   cd agentic-ai-production-system
-   ```
-
-2. Create and activate a virtual environment:
-   ```bash
-   python -m venv venv
-   source venv/bin/activate  # On Windows, use `venv\Scripts\activate`
-   ```
-
-3. Install the dependencies:
-   ```bash
-   pip install -r requirements.txt
-   ```
+```bash
+python3.11 -m venv venv
+source venv/bin/activate
+```
 
 ### Pre-commit Hooks
 
-We use pre-commit hooks to ensure code quality. Install them with:
+We use pre-commit hooks to ensure code quality. Install them using the following command:
 
 ```bash
+pip install pre-commit
 pre-commit install
+```
+
+### Dependencies
+
+Install the project dependencies using the following command:
+
+```bash
+pip install -r requirements.txt
 ```
 
 ## PR Process
 
-### Branch Naming Convention
+### Tradeoff Documentation
 
-Use the following format for branch names:
+Every Pull Request (PR) must include a `docs/tradeoffs.md` file that documents the tradeoffs made in the implementation. This file should include:
+
+- The problem being solved
+- The proposed solution
+- The tradeoffs made
+- The rationale for the tradeoffs
+
+### PR Checklist
+
+Before submitting a PR, please ensure that:
+
+- [ ] You have created a `docs/tradeoffs.md` file
+- [ ] Your code follows the project's style guidelines
+- [ ] You have added or updated tests as necessary
+- [ ] Your changes are documented in the project's documentation
+- [ ] Your code has been reviewed by at least one other contributor
+
+### PR Review
+
+All PRs must be reviewed by at least one other contributor before they can be merged. The reviewer should ensure that:
+
+- The code is well-structured and easy to understand
+- The code follows the project's style guidelines
+- The code is well-tested
+- The code is well-documented
+- The tradeoffs made in the implementation are well-documented
+
+## Commit Message Convention
+
+We follow the [Conventional Commits](https://www.conventionalcommits.org/) specification for our commit messages. This leads to more readable messages that are easy to follow when looking through the project history. The commit message should be structured as follows:
+
 ```
-<type>/<issue-number>-<short-description>
+<type>[optional scope]: <description>
+
+[optional body]
+
+[optional footer(s)]
 ```
-Examples:
-- `feat/123-add-new-agent`
-- `fix/456-resolve-memory-leak`
 
-### Commit Message Convention
+### Types
 
-We follow the [Conventional Commits](https://www.conventionalcommits.org/) specification. Here are the commit types we use:
+The following types are allowed:
 
 - `feat`: A new feature
 - `fix`: A bug fix
-- `docs`: Documentation changes
-- `style`: Changes that do not affect the meaning of the code (white-space, formatting, missing semi-colons, etc.)
+- `docs`: Documentation only changes
+- `style`: Changes that do not affect the meaning of the code (white-space, formatting, missing semi-colons, etc)
 - `refactor`: A code change that neither fixes a bug nor adds a feature
 - `perf`: A code change that improves performance
-- `test`: Adding missing or correcting existing tests
-- `chore`: Changes to the build process or auxiliary tools and libraries such as documentation generation
+- `test`: Adding missing tests or correcting existing tests
+- `build`: Changes that affect the build system or external dependencies (example scopes: gulp, broccoli, npm)
+- `ci`: Changes to our CI configuration files and scripts (example scopes: Travis, Circle, BrowserStack, SauceLabs)
+- `chore`: Other changes that don't modify src or test files
+- `revert`: Reverts a previous commit
 
-Example commit message:
+### Examples
+
+Here are some examples of well-formed commit messages:
+
 ```
-feat: add new agent for customer support
+feat: add new API endpoint for user authentication
 
-- Implement LangGraph orchestration for the new agent
-- Add hybrid RAG for improved response quality
-- Include safety guardrails for PII, toxicity, and injection
-```
+This commit adds a new API endpoint for user authentication. The endpoint is secured using JWT tokens.
 
-### PR Template
-
-When submitting a PR, please use the following template:
-
-```markdown
-## Description
-
-Please include a summary of the changes and the related issue. Please also include relevant motivation and context. List any dependencies that are required for this change.
-
-## Type of Change
-
-Please delete options that are not relevant.
-
-- [ ] Bug fix (non-breaking change which fixes an issue)
-- [ ] New feature (non-breaking change which adds functionality)
-- [ ] Breaking change (fix or feature that would cause existing functionality to not work as expected)
-- [ ] Documentation update
-
-## How Has This Been Tested?
-
-Please describe the tests that you ran to verify your changes. Provide instructions so we can reproduce. Please also list any relevant details for your test configuration.
-
-## Tradeoffs Documentation
-
-Please provide a detailed explanation of the tradeoffs made in this PR. Include any performance impacts, security considerations, and other relevant factors.
-
-## Checklist
-
-- [ ] My code follows the style guidelines of this project
-- [ ] I have performed a self-review of my own code
-- [ ] I have commented my code, particularly in hard-to-understand areas
-- [ ] I have made corresponding changes to the documentation
-- [ ] My changes generate no new warnings
-- [ ] I have added tests that prove my fix is effective or that my feature works
-- [ ] New and existing unit tests pass locally with my changes
-- [ ] Any dependent changes have been merged and published in downstream modules
+Closes #123
 ```
 
-### Tradeoffs Documentation
+```
+fix: fix bug in user authentication
 
-Every PR must include a `docs/tradeoffs.md` entry that documents the tradeoffs made in the PR. This includes:
+This commit fixes a bug in the user authentication system. The bug was causing the system to crash when an invalid token was provided.
 
-- Performance impacts
-- Security considerations
-- Usability tradeoffs
-- Other relevant factors
+Closes #456
+```
 
-Example `docs/tradeoffs.md` entry:
+```
+docs: update README with new installation instructions
 
-```markdown
-## PR #123: Add New Agent for Customer Support
+This commit updates the README with new installation instructions for the project.
 
-### Tradeoffs
-
-1. **Performance**:
-   - The new agent introduces additional latency due to the hybrid RAG implementation. Benchmarks show a 20% increase in response time compared to the previous version.
-   - The safety guardrails add a 10% overhead to the response generation process.
-
-2. **Security**:
-   - The new agent includes comprehensive safety guardrails for PII, toxicity, and injection, which significantly reduce the risk of malicious outputs.
-   - However, the guardrails require additional computational resources and may impact performance.
-
-3. **Usability**:
-   - The new agent provides a more natural and context-aware interaction, improving user experience.
-   - The increased complexity of the agent may require additional training for support staff.
-
-4. **Other**:
-   - The new agent requires additional storage for the hybrid RAG index, increasing the overall storage footprint by 30%.
+Closes #789
 ```
 
 ## Test Requirements
 
-We strive for high test coverage to ensure the reliability and stability of our codebase. For new code, we require:
+We require that all new code has at least 80% test coverage. This ensures that the code is well-tested and that any future changes are less likely to introduce bugs. We use the `pytest` framework for our tests, and you can run the tests using the following command:
 
-- Unit tests covering all critical paths
-- Integration tests for complex interactions
-- End-to-end tests for user workflows
-- Performance tests for critical components
+```bash
+pytest --cov=agentic_ai_production_system --cov-report=term-missing
+```
 
-We use the following testing frameworks:
+This command will run the tests and display the coverage report. The coverage report will show you which lines of code are not covered by the tests. You should aim to cover as much of the code as possible, but it's okay if you can't cover 100% of the code.
 
-- `pytest` for unit and integration tests
-- `locust` for performance testing
-- `pytest-cov` for coverage reporting
+## Conclusion
 
-### Running Tests
-
-1. Run unit and integration tests:
-   ```bash
-   pytest --cov=src tests/
-   ```
-
-2. Run performance tests:
-   ```bash
-   locust -f tests/performance/locustfile.py
-   ```
-
-### Coverage Requirements
-
-- New code must have at least 80% coverage.
-- Overall project coverage should not decrease with new PRs.
-
-## Additional Resources
-
-- [Project Documentation](docs/README.md)
-- [Architecture Overview](docs/architecture.md)
-- [Development Guide](docs/development.md)
-- [Testing Guide](docs/testing.md)
-
-Thank you for your contributions! We look forward to your PRs and issues.
+Thank you for your interest in contributing to our Agentic AI Production System! We appreciate your effort and look forward to your contributions. If you have any questions or need help, please don't hesitate to reach out to us.
 ```
