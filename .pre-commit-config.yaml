@@ -1,23 +1,22 @@
 ```yaml
 repos:
   - repo: https://github.com/pre-commit/pre-commit-hooks
-    rev: v4.4.0  # Use the latest stable revision
+    rev: v4.4.0
     hooks:
-      - id: trailing-whitespace  # Trims trailing whitespace
-      - id: end-of-file-fixer  # Ensures a newline at the end of files
+      - id: trailing-whitespace  # Trims trailing whitespace from all lines
+      - id: end-of-file-fixer  # Ensures a newline at the end of each file
       - id: check-yaml  # Validates YAML files
-      - id: check-merge-conflict  # Checks for merge conflict strings
-
+      - id: check-merge-conflict  # Checks for unresolved merge conflicts
   - repo: https://github.com/astral-sh/ruff-pre-commit
-    rev: v0.1.6  # Use the latest stable revision
+    rev: v0.1.6
     hooks:
-      - id: ruff  # Lints Python code using Ruff
+      - id: ruff
         args: [--fix]  # Automatically fix issues when possible
-      - id: ruff-format  # Formats Python code using Ruff
-
+      - id: ruff-format  # Format code using ruff
   - repo: https://github.com/pre-commit/mirrors-mypy
-    rev: v1.7.0  # Use the latest stable revision
+    rev: v1.7.0
     hooks:
-      - id: mypy  # Static type checker for Python
+      - id: mypy
         args: [--ignore-missing-imports]  # Ignore missing imports during type checking
+        additional_dependencies: [types-all]  # Additional dependencies for mypy
 ```
