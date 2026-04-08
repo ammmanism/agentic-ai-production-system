@@ -1,0 +1,230 @@
+# Observability Configuration
+# This file contains settings for logging, metrics, tracing, and monitoring.
+
+observability:
+  # Logging Configuration (Loguru)
+  logging:
+    # Log level: "DEBUG", "INFO", "WARNING", "ERROR", "CRITICAL"
+    level: INFO
+    # Log format pattern
+    format: "<green>{time:YYYY-MM-DD HH:mm:ss.SSS}</green> | <level>{level: <8}</level> | <cyan>{name}</cyan>:<cyan>{function}</cyan>:<cyan>{line}</cyan> - <level>{message}</level>"
+    # Enable colored output in terminal
+    colorize: true
+    # Backtrace for exceptions
+    backtrace: true
+    # Diagnose mode (show local variables in tracebacks)
+    diagnose: false
+    # Serialization for structured logging
+    serialize: false
+
+    # Output sinks
+    sinks:
+      # Console output
+      console:
+        enabled: true
+        level: INFO
+        format: "<green>{time:HH:mm:ss}</green> | <level>{level: <8}</level> | <message>"
+
+      # File output
+      file:
+        enabled: true
+        level: DEBUG
+        path: "logs/agentic_ai.log"
+        rotation:
+          # Rotate by size
+          max_size_mb: 100
+          # Rotate by time
+          every: "1 day"
+        retention:
+          # Keep logs for this many days
+          days: 30
+        compression: zip
+        format: "{time:YYYY-MM-DD HH:mm:ss.SSS} | {level: <8} | {name}:{function}:{line} - {message}"
+
+      # JSON output for log aggregation
+      json:
+        enabled: false
+        level: INFO
+        path: "logs/agentic_ai.json"
+        serializer: json
+
+    # Contextual logging
+    context:
+      # Default context fields to include in all logs
+      default_fields:
+        - service: agentic-ai
+        - environment: production
+      # Include request_id from context automatically
+      auto_include_request_id: true
+
+  # Prometheus Metrics Configuration
+  prometheus:
+    # Enable Prometheus metrics endpoint
+    enabled: true
+    # Metrics endpoint path
+    path: /metrics
+    # Port for metrics server (null to use main app port)
+    port: null
+
+    # Metric categories to collect
+    metrics:
+      # HTTP request metrics
+      http:
+        enabled: true
+        # Include request body size
+        include_body_size: true
+        # Include response size
+        include_response_size: true
+        # Histogram buckets for latency (in seconds)
+        latency_buckets:
+          - 0.005
+          - 0.01
+          - 0.025
+          - 0.05
+          - 0.1
+          - 0.25
+          - 0.5
+          - 1.0
+          - 2.5
+          - 5.0
+          - 10.0
+
+      # LLM-specific metrics
+      llm:
+        enabled: true
+        # Track tokens processed
+        track_tokens: true
+        # Track model usage
+        track_models: true
+        # Track cost estimates
+        track_costs: true
+
+      # RAG-specific metrics
+      rag:
+        enabled: true
+        # Track retrieval latency
+        track_retrieval_latency: true
+        # Track chunk counts
+        track_chunk_counts: true
+        # Track embedding calls
+        track_embedding_calls: true
+
+      # Queue metrics (for background workers)
+      queue:
+        enabled: true
+        # Track queue depth
+        track_depth: true
+        # Track processing time
+        track_processing_time: true
+        # Track failure rates
+        track_failures: true
+
+    # Labels to add to all metrics
+    labels:
+      service: agentic-ai
+      version: "1.0.0"
+
+  # Distributed Tracing Configuration
+  tracing:
+    # Enable distributed tracing
+    enabled: true
+    # Tracing backend: "jaeger", "zipkin", "otel", "datadog"
+    backend: jaeger
+    # Service name for traces
+    service_name: agentic-ai-api
+    # Sample rate (0.0 to 1.0)
+    sample_rate: 1.0
+    # Trace propagation format: "w3c", "b3", "jaeger"
+    propagation_format: w3c
+
+    # Backend-specific configuration
+    jaeger:
+      # Jaeger agent host
+      host: localhost
+      # Jaeger agent port
+      port: 6831
+      # Collector endpoint (alternative to agent)
+      collector_endpoint: null
+
+    # Spans to exclude from tracing
+    exclude_spans:
+      - health_check
+      - metrics
+
+    # Tags to add to all spans
+    default_tags:
+      environment: production
+      team: ai-engineering
+
+  # Alerting Thresholds
+  alerting:
+    # Error rate threshold (percentage)
+    error_rate_threshold: 5.0
+    # Latency thresholds (p99 in milliseconds)
+    latency_p99_threshold:
+      chat: 5000
+      ingest: 30000
+      feedback: 1000
+    # Queue depth threshold
+    queue_depth_threshold: 100
+    # Memory usage threshold (percentage)
+    memory_usage_threshold: 85.0
+    # CPU usage threshold (percentage)
+    cpu_usage_threshold: 80.0
+
+    # Alert channels
+    channels:
+      slack:
+        enabled: false
+        webhook_url_env: SLACK_ALERT_WEBHOOK
+        channel: "#ai-alerts"
+      pagerduty:
+        enabled: false
+        routing_key_env: PAGERDUTY_ROUTING_KEY
+      email:
+        enabled: false
+        recipients:
+          - ai-team@example.com
+
+  # Health Check Configuration
+  health_checks:
+    # Enable health check endpoint
+    enabled: true
+    # Path for health check endpoint
+    path: /health
+    # Include detailed component status
+    include_details: true
+    # Components to check
+    components:
+      database:
+        enabled: true
+        timeout_ms: 5000
+      redis:
+        enabled: true
+        timeout_ms: 2000
+      llm_api:
+        enabled: true
+        timeout_ms: 10000
+      vector_store:
+        enabled: true
+        timeout_ms: 5000
+
+    # Interval between automatic health checks (seconds)
+    check_interval_seconds: 30
+
+  # Dashboard Configuration
+  dashboard:
+    # Enable metrics dashboard
+    enabled: true
+    # Dashboard type: "grafana", "custom"
+    type: grafana
+    # Grafana configuration
+    grafana:
+      # Grafana server URL
+      url: http://localhost:3000
+      # Dashboard folder
+      folder: Agentic AI
+      # Auto-provision dashboards
+      auto_provision: true
+      # Dashboard refresh interval (seconds)
+      refresh_interval: 30

@@ -1,0 +1,107 @@
+# RAG (Retrieval-Augmented Generation) Configuration
+# This file contains all settings related to document processing, chunking, and retrieval.
+
+rag:
+  # Document Processing
+  document:
+    # Maximum file size in MB
+    max_file_size_mb: 50
+    # Supported document types
+    supported_types:
+      - pdf
+      - txt
+      - md
+      - docx
+    # Timeout for document download in seconds
+    download_timeout_seconds: 30
+
+  # Text Chunking Strategy
+  chunking:
+    # Chunking method: "fixed", "recursive", "semantic"
+    method: recursive
+    # Target chunk size in characters
+    chunk_size: 1000
+    # Overlap between chunks in characters
+    chunk_overlap: 200
+    # Minimum chunk size to keep
+    min_chunk_size: 100
+    # Separators for recursive chunking (in order of priority)
+    separators:
+      - "\n\n"
+      - "\n"
+      - ". "
+      - " "
+      - ""
+
+  # Embedding Configuration
+  embedding:
+    # Embedding model to use
+    model_name: text-embedding-ada-002
+    # Dimensionality of embeddings
+    dimensions: 1536
+    # Maximum input tokens for embedding model
+    max_input_tokens: 8191
+    # Batch size for embedding generation
+    batch_size: 32
+    # Retry settings for embedding API calls
+    retry:
+      max_retries: 3
+      initial_delay_ms: 100
+      max_delay_ms: 5000
+      exponential_base: 2
+
+  # Vector Store Configuration
+  vector_store:
+    # Type of vector store: "faiss", "pinecone", "weaviate", "chroma"
+    type: faiss
+    # Index parameters
+    index:
+      # Number of clusters for IVF index
+      n_clusters: 4
+      # Number of probes at search time
+      n_probes: 2
+    # Similarity metric: "cosine", "euclidean", "dot_product"
+    similarity_metric: cosine
+
+  # Retrieval Configuration
+  retrieval:
+    # Number of documents to retrieve initially
+    top_k: 5
+    # Score threshold for filtering results
+    score_threshold: 0.7
+    # Enable re-ranking of retrieved documents
+    rerank:
+      enabled: true
+      # Re-ranking model
+      model: cross-encoder/ms-marco-MiniLM-L-6-v2
+      # Top K after re-ranking
+      top_k_after_rerank: 3
+
+  # Context Building
+  context:
+    # Maximum context length in tokens
+    max_context_length: 4096
+    # Include metadata in context
+    include_metadata: true
+    # Metadata fields to include
+    metadata_fields:
+      - source
+      - page
+      - author
+    # Separator between context chunks
+    chunk_separator: "\n\n---\n\n"
+
+  # Cache Configuration
+  cache:
+    # Enable caching of embeddings
+    enabled: true
+    # Cache TTL in hours
+    ttl_hours: 24
+    # Cache backend: "memory", "redis"
+    backend: redis
+    # Redis connection settings
+    redis:
+      host: localhost
+      port: 6379
+      db: 0
+      key_prefix: "rag:embeddings:"
