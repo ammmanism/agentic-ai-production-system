@@ -21,6 +21,7 @@ def rerank(
     Falls back to identity (original order) when not installed.
     """
     try:
+        logger.debug(f"Attempting to rerank {len(candidates)} candidates using cross-encoder.")
         from sentence_transformers import CrossEncoder  # type: ignore
 
         encoder = CrossEncoder(model)
