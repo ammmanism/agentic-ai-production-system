@@ -69,6 +69,7 @@ def hybrid_search(
 
     alpha=1.0 → pure dense; alpha=0.0 → pure sparse.
     """
+    logger.debug(f"Executing hybrid fusion with alpha={alpha} for query: {query}")
     if len(dense_results) != len(sparse_scores):
         raise ValueError("dense_results and sparse_scores must have the same length")
 
