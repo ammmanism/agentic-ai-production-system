@@ -1,34 +1,30 @@
-"""LLM provider abstract base class."""
-from __future__ import annotations
-
 from abc import ABC, abstractmethod
-from typing import Any, Dict, Iterator, List, Optional
+from typing import List, Dict, Any, Optional
 
-
-class BaseLLM(ABC):
-    """Abstract interface that every LLM provider must implement."""
+class LLMProvider(ABC):
+    """
+    Abstract Base Class for all LLM interactions. 
+    Enforces a strict Interface so the agent can switch seamlessly 
+    between OpenAI, Anthropic, or Local vLLM endpoints.
+    """
+    
+    @abstractmethod
+    def __init__(self, api_key: Optional[str] = None, model_name: Optional[str] = None):
+        self.api_key = api_key
+        self.model_name = model_name
 
     @abstractmethod
-    def complete(
-        self,
-        messages: List[Dict[str, str]],
-        max_tokens: int = 1024,
-        temperature: float = 0.7,
-        **kwargs: Any,
-    ) -> str:
-        """Return a completion string."""
+    async def invoke(self, messages: List[Dict[str, str]], temperature: float = 0.0) -> str:
+        """
+        Executes a standard conversational turn.
+        Messages must be formatted as: [{'role': 'user|assistant|system', 'content': '...'}]
+        """
+        pass
 
     @abstractmethod
-    def stream(
-        self,
-        messages: List[Dict[str, str]],
-        max_tokens: int = 1024,
-        temperature: float = 0.7,
-        **kwargs: Any,
-    ) -> Iterator[str]:
-        """Yield completion tokens one at a time."""
-
-    @property
-    @abstractmethod
-    def model_name(self) -> str:
-        """Identifier string for the model (used in metrics)."""
+    async def invoke_with_tools(self, messages: List[Dict[str, str]], tools: List[Dict[str, Any]], temperature: float = 0.0) -> Dict[str, Any]:
+        """
+        Executes a request enforcing the LLM to output according to a JSON tool schema.
+        Returns the parsed tool call dictionary.
+        """
+        pass

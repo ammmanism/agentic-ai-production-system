@@ -1,62 +1,52 @@
-"""Anthropic Claude LLM provider implementation."""
-from __future__ import annotations
-
 import os
-from typing import Any, Dict, Iterator, List
+import logging
+from typing import List, Dict, Any, Optional
+from .base import LLMProvider
 
-from .base import BaseLLM
+try:
+    from anthropic import AsyncAnthropic
+except ImportError:
+    AsyncAnthropic = None
 
+logger = logging.getLogger(__name__)
 
-class AnthropicLLM(BaseLLM):
-    """Wrapper around the Anthropic Messages API."""
+class AnthropicProvider(LLMProvider):
+    
+    def __init__(self, api_key: Optional[str] = None, model_name: str = "claude-3-sonnet-20240229"):
+        super().__init__(api_key, model_name)
+        if AsyncAnthropic is None:
+            raise ImportError("Please install the 'anthropic' package via pip.")
+            
+        key = self.api_key or os.environ.get("ANTHROPIC_API_KEY")
+        if not key:
+            logger.warning("ANTHROPIC_API_KEY not found. Using dummy execution mode.")
+            self.client = None
+        else:
+            self.client = AsyncAnthropic(api_key=key)
 
-    def __init__(self, model: str = "claude-3-5-haiku-latest", api_key: str | None = None):
-        self._model = model
-        self._api_key = api_key or os.getenv("ANTHROPIC_API_KEY", "")
-
-    @property
-    def model_name(self) -> str:
-        return self._model
-
-    def _client(self):
-        import anthropic  # type: ignore
-        return anthropic.Anthropic(api_key=self._api_key)
-
-    def complete(
-        self,
-        messages: List[Dict[str, str]],
-        max_tokens: int = 1024,
-        temperature: float = 0.7,
-        **kwargs: Any,
-    ) -> str:
-        # Anthropic separates system messages
-        system = next((m["content"] for m in messages if m["role"] == "system"), "")
-        user_messages = [m for m in messages if m["role"] != "system"]
-
-        response = self._client().messages.create(
-            model=self._model,
-            max_tokens=max_tokens,
-            system=system,
-            messages=user_messages,
-            **kwargs,
+    async def invoke(self, messages: List[Dict[str, str]], temperature: float = 0.0) -> str:
+        if not self.client:
+            logger.debug(f"[Mock Anthropic] Received messages: {len(messages)}")
+            return "This is a mock response from Anthropic Provider."
+            
+        logger.info(f"Invoking {self.model_name}")
+        
+        # Anthropic requires system prompt as a separate param
+        system_msg = next((m["content"] for m in messages if m["role"] == "system"), None)
+        user_msgs = [m for m in messages if m["role"] != "system"]
+        
+        response = await self.client.messages.create(
+            model=self.model_name,
+            max_tokens=4096,
+            temperature=temperature,
+            system=system_msg if system_msg else None,
+            messages=user_msgs
         )
         return response.content[0].text
 
-    def stream(
-        self,
-        messages: List[Dict[str, str]],
-        max_tokens: int = 1024,
-        temperature: float = 0.7,
-        **kwargs: Any,
-    ) -> Iterator[str]:
-        system = next((m["content"] for m in messages if m["role"] == "system"), "")
-        user_messages = [m for m in messages if m["role"] != "system"]
-
-        with self._client().messages.stream(
-            model=self._model,
-            max_tokens=max_tokens,
-            system=system,
-            messages=user_messages,
-        ) as stream_ctx:
-            for text in stream_ctx.text_stream:
-                yield text
+    async def invoke_with_tools(self, messages: List[Dict[str, str]], tools: List[Dict[str, Any]], temperature: float = 0.0) -> Dict[str, Any]:
+        if not self.client:
+            return {"name": "mock_tool", "arguments": {}}
+            
+        # Convert internal tool schema to Anthropic's tool spec
+        raise NotImplementedError("Tool parsing schema mapper needed for Anthropic spec.")

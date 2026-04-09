@@ -1,57 +1,57 @@
-"""FastAPI application with lifespan event handling."""
-from __future__ import annotations
-
-import logging
 from contextlib import asynccontextmanager
-
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
+import time
+import logging
 
-from .middleware.request_id import RequestIdMiddleware
-from .middleware.rate_limit import RateLimitMiddleware
-from .routes import chat, ingest, feedback
+from entrypoints.api.routes import chat, ingest, feedback, health
+from safety.rate_limiter.token_bucket import TokenBucketRateLimiter
+from entrypoints.api.middleware.request_id import RequestIDMiddleware
 
 logger = logging.getLogger(__name__)
 
-
+# Basic lifespan for starting heavy resources (vLLM, Qdrant pools, etc)
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    """Startup and shutdown lifecycle events."""
-    logger.info("Starting Agentic AI API...")
-    # Initialise connections (vector DB, Redis, etc.) here
+    # Startup actions
+    logger.info("Initializing Agentic AI System resources...")
+    start_time = time.time()
+    
+    # Initialize Rate Limiter globally accessible via app state
+    app.state.rate_limiter = TokenBucketRateLimiter(points=100, interval=60)
+    
+    logger.info(f"System ready in {time.time() - start_time:.2f}s")
     yield
-    logger.info("Shutting down Agentic AI API...")
+    
+    # Shutdown actions
+    logger.info("Shutting down cleanly, flushing telemetry...")
 
-
+# Initialize FastAPI with extensive OpenAPI docs
 app = FastAPI(
     title="Agentic AI Production System",
-    description="Production-ready agentic RAG API with safety, observability, and evaluation.",
-    version="0.1.0",
-    lifespan=lifespan,
+    description="High-throughput RAG agent system with streaming capabilities and extreme safety boundaries.",
+    version="1.0.0",
+    lifespan=lifespan
 )
 
-# ----- Middleware -----
+# Custom Middlewares
+app.add_middleware(RequestIDMiddleware)
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],
+    allow_origins=["*"],  # Production needs explicit origins
+    allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
 )
-app.add_middleware(RequestIdMiddleware)
-app.add_middleware(RateLimitMiddleware)
 
-# ----- Routers -----
-app.include_router(chat.router, prefix="/chat", tags=["chat"])
-app.include_router(ingest.router, prefix="/ingest", tags=["ingest"])
-app.include_router(feedback.router, prefix="/feedback", tags=["feedback"])
+# Include Routers
+app.include_router(health.router, tags=["Health"])
+app.include_router(chat.router, prefix="/api/v1/chat", tags=["Agent Chat"])
 
-
-@app.get("/health")
-async def health_check():
-    """Liveness probe."""
-    return {"status": "ok"}
-
+# To be fully populated with real logic later
+# app.include_router(ingest.router, prefix="/api/v1/ingest", tags=["Document Ingestion"])
+# app.include_router(feedback.router, prefix="/api/v1/feedback", tags=["Human Feedback"])
 
 @app.get("/")
 async def root():
-    return {"message": "Agentic AI Production System — visit /docs for the API reference."}
+    return {"message": "Welcome to the Agentic Production System. Check /docs for interactive API reference."}
