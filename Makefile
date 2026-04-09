@@ -1,4 +1,4 @@
-.PHONY: run test deploy lint format
+.PHONY: run test deploy lint format build clean
 
 run:
 	docker-compose up
@@ -12,5 +12,12 @@ lint:
 format:
 	ruff format .
 
+build:
+	docker build -t agentic-system .
+
 deploy-staging:
 	./scripts/deploy_staging.sh
+
+clean:
+	find . -type d -name "__pycache__" -exec rm -rf {} +
+	rm -rf .pytest_cache .coverage coverage.xml
