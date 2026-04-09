@@ -1,39 +1,35 @@
-# Architecture
+# 🏗️ System Architecture
 
-## System Overview
+## Overview
+The Agentic AI Production System is designed as a modular, scalable framework for building and deploying agentic RAG applications.
 
-The Agentic AI Production System uses a **LangGraph-based orchestration loop** that implements Plan → Execute → Reflect cycles with human-in-the-loop gates.
-
+## Component Diagram
+```mermaid
+graph TD
+    User([User]) <--> API[FastAPI Entrypoint]
+    API <--> Orchestrator[Planner/Orchestrator]
+    Orchestrator <--> State[Agent State Manager]
+    Orchestrator <--> LLM[LLM Provider OpenAI/Anthropic]
+    Orchestrator <--> RAG[RAG Engine]
+    RAG <--> VectorDB[(Qdrant Vector DB)]
+    Orchestrator <--> Execution[Tool Execution Engine]
+    Execution <--> Tools[External Tools/APIs]
+    
+    subgraph Observability
+        API --> Logging[Structured Logging]
+        API --> Metrics[Prometheus Metrics]
+    end
+    
+    subgraph Safety
+        API --> Guards[Safety Guards/PII Scrubber]
+    end
 ```
-User Query
-    │
-    ▼
-┌─────────────┐       ┌──────────────┐       ┌──────────────┐
-│   Planner   │──────▶│   Executor   │──────▶│  Reflector   │
-│ (LLM + RAG) │       │ (Tool calls) │       │(Self-critique)│
-└─────────────┘       └──────────────┘       └──────┬───────┘
-        ▲                     │                      │
-        │              Final Answer            Needs replan?
-        └──────────────────────────────────────────┘
-```
-
-## Key Components
-
-| Layer | Technology | Purpose |
-|-------|-----------|---------|
-| Orchestration | LangGraph | Stateful cyclic agent graph |
-| Retrieval | Qdrant + BM25 | Hybrid dense + sparse search |
-| LLM Gateway | OpenAI/Anthropic/vLLM | Swappable provider interface |
-| Safety | Regex + Detoxify | Injection, PII, toxicity |
-| Observability | Prometheus + Langfuse | Metrics, cost, tracing |
-| Deployment | Docker + K8s + Terraform | Container-first delivery |
 
 ## Data Flow
-
-1. **Ingest**: Documents → Chunker → Embedder → Qdrant
-2. **Query**: User → Safety guards → Planner → RAG → Executor → Reflector → Answer
-3. **Feedback**: Answer → Human rating → FeedbackStore → ActiveLearner → Fine-tune
-
-## Design Decisions
-
-See [tradeoffs.md](tradeoffs.md) for a detailed table of every key decision.
+1. **Request**: User sends a query to the API.
+2. **Safety Check**: Input is validated for prompt injection and PII.
+3. **Planning**: The Orchestrator uses an LLM to plan the response.
+4. **RAG**: Relevant context is retrieved from the Vector DB.
+5. **Execution**: If tools are needed, the Execution engine runs them safely.
+6. **Response Generation**: The final answer is synthesized and scrubbed for safety.
+7. **Observability**: Every step is logged and metrics are collected.
