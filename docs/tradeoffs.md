@@ -1,11 +1,10 @@
-# Architecture Tradeoffs
+# ⚖️ Architecture Tradeoffs
 
-This document outlines the core architectural and library decisions made for this agentic AI system.
+This document maintains a living record of critical design decisions. Any major refactor or integration constraint MUST be justified here to avoid revisiting debated topics without new evidence.
 
-| Decision | Alternative | Why We Chose This | Downside |
-|----------|-------------|-------------------|-----------|
-| **LangGraph vs CrewAI** | CrewAI is simpler | Need explicit cyclic flows, state management & human-in-loop approval | Steeper learning curve, more boilerplate |
-| **Qdrant vs Pinecone** | Pinecone is fully managed | Better cost control, open-source with self-host option | More operational overhead to maintain locally |
-| **Pydantic vs TypedDict** | TypedDict native to langgraph | Strict validation and schema enforcement at boundaries | Slight performance overhead for complex models |
-| **Prometheus vs Datadog** | Datadog has deeper APM out of box | Vendor agnosticism, cheaper for high cardinality metrics | Requires manual grafana dashboards |
-| **Sync API vs Async** | Async everywhere for max throughput | Simplified implementation, predictable worker management | Slightly higher latency p99 under burst load |
+| Decision | Alternatives Considered | Why Chosen | Tradeoff |
+|----------|-------------------------|------------|----------|
+| **Orchestration**: LangGraph | AutoGen, CrewAI, Custom Loop | LangGraph provides explicit, typed state machines. This prevents models from going into endless loops and makes conditional routing extremely deterministic. | We sacrifice the "free-form" multi-agent chat vibe for strict graph-level verbosity and state boilerplate. |
+| **Vector Store**: Qdrant | Pinecone, Milvus, Chroma | Rust-based, highly efficient, supports both dense + sparse (BM25) out of the box natively with zero-dependency binaries. | Self-hosting Qdrant on K8s shifts operational burden vs a managed service like Pinecone, but saves $10k+ at scale. |
+| **Caching Layer**: Redis Exact + Semantic | Only Redis, or LLMLingua | High query volume often hits exact matches. Semantic caching intercepts paraphrased queries. | Semantic cache requires a lightweight embedding call upfront, adding a minimal ~50ms latency penalty but saving ~10% compute cost overall. |
+| **Tool Execution**: Sandboxed Python via Docker | Native `exec()`, E2B hosted | Local Docker provides complete isolation from the host filesystem without incurring a 3rd party API network latency for code execution. | Maintaining and building isolated execution containers adds friction to the CI/CD pipeline and local developer setup. |

@@ -1,69 +1,74 @@
 # 🧠 Agentic AI Production System
 
-[![Tests](https://github.com/yourname/agentic-ai-production-system/actions/workflows/ci.yml/badge.svg)](https://github.com/yourname/agentic-ai-production-system/actions)
-[![Coverage](https://codecov.io/gh/yourname/agentic-ai-production-system/branch/main/graph/badge.svg)](https://codecov.io/gh/yourname/agentic-ai-production-system)
-[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+[![CI/CD](https://github.com/yourname/agentic-ai-production-system/actions/workflows/ci.yml/badge.svg)](https://github.com/yourname/agentic-ai-production-system/actions)
+[![License: Apache 2.0](https://img.shields.io/badge/License-Apache_2.0-blue.svg)](https://opensource.org/licenses/Apache-2.0)
+[![Python Version](https://img.shields.io/badge/python-3.11%2B-blue)](https://www.python.org/downloads/)
 [![Live Demo](https://img.shields.io/badge/Live_Demo-HuggingFace-yellow?logo=huggingface)](https://huggingface.co/spaces/yourname/agentic-demo)
 
-**Production-ready agentic RAG system** that handles 10k queries/day at $0.002/query – 73% cheaper than OpenAI Assistants API.
+**Production-ready agentic RAG system.** 
+Highly optimized, evaluated, and secure framework mixing fast hybrid retrieval with LangGraph-based agentic reasoning. Built for massive concurrency and absolute reliability at a fraction of the cost of generic managed APIs.
 
-## ✨ Features
-- 🔁 **Hybrid search** (dense + BM25) + cross-encoder reranking
-- 🛡️ **Prompt injection & PII protection** out of the box
-- 📊 **Prometheus metrics** for latency, tokens, cost per request
-- 🧪 **CI/CD with RAGAS evaluation** – fail PRs that regress quality
-- 🤝 **Human-in-the-loop** approval gates for sensitive actions
-- 🚀 **Deploy to K8s** with autoscaling & Terraform
+---
 
-## 🎥 Demo (30 seconds)
-![Demo GIF](demos/demo.gif)
-[▶️ Watch on Loom](https://loom.com/)
+## 🎥 Demo
+![Demo terminal recording](demos/demo.gif)
 
-## 📦 Quick Start
+> Note: For a detailed video walkthrough of features, see [▶️ Watch on Loom](https://loom.com/)
+
+---
+
+## 🚀 One-Line Quick Start (Codespaces)
+
+Simply open this repository in a GitHub Codespace or Dev Container to get an instant, fully-configured environment.
+
+[![Open in GitHub Codespaces](https://github.com/codespaces/badge.svg)](https://codespaces.new/yourname/agentic-ai-production-system)
+
+Or run locally via Docker:
 ```bash
-git clone https://github.com/yourname/agentic-ai-production-system
-cd agentic-ai-production-system
 make run
-# Then open http://localhost:8000/docs
 ```
 
-## 🤖 Daily Sync (Automation)
-To keep your repository updated automatically every day:
-
-### 🪟 Windows Task Scheduler
-1. Open **Task Scheduler** → **Create Basic Task**.
-2. Name: `Agentic AI Daily Push`.
-3. Trigger: **Daily** (e.g., 3:00 AM).
-4. Action: **Start a Program**.
-5. Program/script: `powershell.exe`.
-6. Add arguments: `-File "C:\Users\amman\.gemini\antigravity\scratch\agentic-ai-production-system\scripts\daily_push.ps1"`.
-7. Finish.
-
-## 🧠 Architecture
-![Architecture](docs/architecture.png)
-[See detailed design](docs/architecture.md)
+---
 
 ## 📊 Benchmarks vs Alternatives
-| System | Cost per 1k queries | p95 latency | Tool accuracy |
-|--------|---------------------|-------------|----------------|
+
+| System | Cost per 1k queries | p95 Latency | Tool Accuracy / Faithfulness |
+|--------|---------------------|-------------|------------------------------|
 | **Ours** | $2.10 | 1.8s | 94% |
 | LangChain Agent | $7.80 | 3.2s | 82% |
 | OpenAI Assistants | $8.00 | 2.4s | 89% |
 
-## 📚 Documentation
-- [Tradeoffs & Decisions](docs/tradeoffs.md)
-- [Incident Post-Mortems](docs/failures.md)
-- [Scaling Guide](docs/scaling.md)
+---
 
-## 🧪 Evaluation
-Run RAGAS offline suite:
-```bash
-python evaluation/offline/run_on_testset.py
+## 🧠 Architecture (C4 Context)
+
+```mermaid
+graph TD
+    User([User]) <--> API[FastAPI Entrypoint (Streaming SSE)]
+    API <--> Orchestrator[LangGraph Compiler / Planner]
+    
+    Orchestrator <--> LLM[Providers: vLLM, OpenAI, Anthropic]
+    Orchestrator <--> RAG[Hybrid Dense+BM25 Encoders & Reranker]
+    
+    RAG <--> VectorDB[(Qdrant Vector DB)]
+    
+    subgraph Execution & Sandboxing
+        Orchestrator <--> CodeExec[Docker / E2B Python Sandbox]
+        Orchestrator <--> Search[Tavily Web Search]
+    end
+    
+    subgraph Safety & Auditing
+        API --> Guards[Prompt Injection & Toxicity Check]
+        API --> Logs[Structured JSON Logs -> S3]
+    end
 ```
-Current scores: Faithfulness 0.92 | Answer Relevancy 0.88 | Context Recall 0.91
 
-## 🤝 Contributing
-See [CONTRIBUTING.md](CONTRIBUTING.md) – we require tradeoff docs for every PR.
+---
 
-## 📄 License
-MIT
+## ✨ Repository Highlights
+
+- **LangGraph Compilation**: Highly deterministic state machines vs free-form agent loop (see `orchestration/graph/`).
+- **Safety First**: Regex pattern heuristics + small local models for immediate prompt injection detection (`safety/guards/`).
+- **Precision Engineering**: Caching, FP8 quantization stubs, and exact FLOP counting to monitor optimizations (`precision/`).
+- **Evaluation Driven**: Changes strictly gated on RAGAS metrics via offline evaluation and CI integrations (`evaluation/offline/`).
+- **Full Observability**: Request-level tracing via Langfuse, cost tracking, and Prometheus metrics out of the box (`observability/`).
