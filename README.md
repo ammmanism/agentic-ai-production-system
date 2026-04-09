@@ -27,6 +27,18 @@ make run
 # Then open http://localhost:8000/docs
 ```
 
+## 🤖 Daily Sync (Automation)
+To keep your repository updated automatically every day:
+
+### 🪟 Windows Task Scheduler
+1. Open **Task Scheduler** → **Create Basic Task**.
+2. Name: `Agentic AI Daily Push`.
+3. Trigger: **Daily** (e.g., 3:00 AM).
+4. Action: **Start a Program**.
+5. Program/script: `powershell.exe`.
+6. Add arguments: `-File "C:\Users\amman\.gemini\antigravity\scratch\agentic-ai-production-system\scripts\daily_push.ps1"`.
+7. Finish.
+
 ## 🧠 Architecture
 ![Architecture](docs/architecture.png)
 [See detailed design](docs/architecture.md)
