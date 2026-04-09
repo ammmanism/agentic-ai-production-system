@@ -2,6 +2,9 @@
 from __future__ import annotations
 
 from typing import List
+import logging
+
+logger = logging.getLogger(__name__)
 
 
 def chunk_text(
