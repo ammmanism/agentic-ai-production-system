@@ -1,0 +1,33 @@
+name: 🧪 Evaluation on PR
+
+on:
+  pull_request:
+    branches: [ master, main ]
+
+jobs:
+  ragas-eval:
+    name: 🏆 RAGAS Evaluation
+    runs-on: ubuntu-latest
+    
+    steps:
+    - uses: actions/checkout@v4
+
+    - name: 🐍 Set up Python
+      uses: actions/setup-python@v5
+      with:
+        python-version: '3.11'
+        cache: 'pip'
+
+    - name: 📦 Install dependencies
+      run: |
+        pip install ragas pandas pydantic
+        pip install -e .
+
+    - name: 🚀 Run RAGAS
+      env:
+        OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+      run: |
+        # Generate the testset if missing
+        python scripts/generate_testset.py
+        # Run the evaluator
+        python evaluation/offline/run_on_testset.py
