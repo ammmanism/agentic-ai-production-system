@@ -26,8 +26,10 @@ class PromptManager:
 
     def _load(self, name: str) -> Dict[str, Any]:
         if name in self._cache:
+            logger.debug(f"Prompt cache hit: {name}")
             return self._cache[name]
 
+        logger.info(f"Prompt cache miss: loading {name}")
         path = self._dir / f"{name}.yaml"
         if not path.exists():
             raise FileNotFoundError(f"Prompt template not found: {path}")
