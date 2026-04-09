@@ -1,0 +1,10 @@
+retrieval:
+  hybrid_alpha: 0.7
+  rerank_top_k: 5
+  dense_model: "BAAI/bge-large-en-v1.5"
+  sparse_k1: 1.5
+  sparse_b: 0.75
+
+ingestion:
+  chunk_size: 512
+  chunk_overlap: 64
