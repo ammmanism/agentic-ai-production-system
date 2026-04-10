@@ -35,3 +35,8 @@ confusion_log.jsonl
 # OS
 .DS_Store
 Thumbs.db
+
+# Additional Clutter
+.antigravityignore
+*.log
+*.db

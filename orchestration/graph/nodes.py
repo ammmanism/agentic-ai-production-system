@@ -2,9 +2,12 @@
 from __future__ import annotations
 
 import logging
+import os
 from typing import Any, Dict
 
 from .state import AgentState
+from orchestration.controllers.planner import decompose_query
+from orchestration.controllers.executor import run_step
 
 logger = logging.getLogger(__name__)
 
@@ -19,13 +22,7 @@ def planner_node(state: AgentState) -> AgentState:
     """Decompose the user query into an ordered list of executable steps."""
     logger.info("planner_node: decomposing query=%s", state["query"])
 
-    # In production: call the LLM with a structured-output prompt.
-    # Here we create a simple deterministic plan for demonstration.
-    plan = [
-        f"Step 1: Retrieve relevant context for '{state['query']}'",
-        "Step 2: Analyse context and identify key facts",
-        "Step 3: Synthesise a concise answer",
-    ]
+    plan = decompose_query(state["query"])
 
     return {
         **state,
@@ -52,17 +49,12 @@ def executor_node(state: AgentState) -> AgentState:
     current_step = plan[step_idx]
     logger.info("executor_node: executing step %d — %s", step_idx, current_step)
 
-    # Simulate tool execution (replace with real tool dispatch)
-    result: Dict[str, Any] = {
-        "step": current_step,
-        "output": f"[simulated result for: {current_step}]",
-    }
+    result = run_step(current_step, state)
 
     tool_results = list(state.get("tool_results") or [])
     tool_results.append(result)
 
-    # Decide if we need a replan (e.g., tool failed)
-    needs_replan = False
+    needs_replan = result.get("status") != "success"
 
     return {
         **state,
@@ -90,8 +82,7 @@ def reflector_node(state: AgentState) -> AgentState:
             "final_answer": "Unable to produce a confident answer after multiple attempts.",
         }
 
-    # In production: use an LLM to decide whether the results are good enough.
-    should_replan = False  # Placeholder logic
+    should_replan = state.get("needs_replan", False)
 
     return {
         **state,
@@ -105,7 +96,21 @@ def reflector_node(state: AgentState) -> AgentState:
 # ---------------------------------------------------------------------------
 
 def _synthesise(state: AgentState) -> str:
-    """Combine tool results into a final answer (stub — replace with LLM)."""
+    """Combine tool results into a final answer via LLM synthesis if available."""
     results = state.get("tool_results") or []
     outputs = [r.get("output", "") for r in results]
+    context = "\\n".join(str(o) for o in outputs)
+    
+    if os.getenv("OPENAI_API_KEY"):
+        try:
+            from langchain.chat_models import init_chat_model
+            from langchain.schema import HumanMessage
+            
+            llm = init_chat_model("gpt-3.5-turbo", model_provider="openai")
+            prompt = f"Synthesize a helpful answer to the user's query '{state['query']}' using ONLY the following execution logs context:\\n{context}"
+            response = llm.invoke([HumanMessage(content=prompt)])
+            return response.content
+        except Exception as e:
+            logger.warning(f"Synthesis failed, using fallback: {e}")
+
     return " | ".join(outputs) if outputs else "No answer generated."
