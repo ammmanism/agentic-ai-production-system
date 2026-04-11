@@ -1,59 +1,47 @@
-"""OpenAI LLM provider implementation."""
-from __future__ import annotations
-
 import os
-from typing import Any, Dict, Iterator, List
+import logging
+from typing import List, Dict, Any, Optional
+from .base import LLMProvider
 
-from .base import BaseLLM
+try:
+    from openai import AsyncOpenAI
+except ImportError:
+    AsyncOpenAI = None
 
+logger = logging.getLogger(__name__)
 
-class OpenAILLM(BaseLLM):
-    """Wrapper around the OpenAI Chat Completions API."""
+class OpenAIProvider(LLMProvider):
+    
+    def __init__(self, api_key: Optional[str] = None, model_name: str = "gpt-4-turbo"):
+        super().__init__(api_key, model_name)
+        if AsyncOpenAI is None:
+            raise ImportError("Please install the 'openai' package via pip.")
+            
+        key = self.api_key or os.environ.get("OPENAI_API_KEY")
+        if not key:
+            # We fail gracefully in case we are purely simulating
+            logger.warning("OPENAI_API_KEY not found. Using dummy execution mode.")
+            self.client = None
+        else:
+            self.client = AsyncOpenAI(api_key=key)
 
-    def __init__(self, model: str = "gpt-4o-mini", api_key: str | None = None):
-        self._model = model
-        self._api_key = api_key or os.getenv("OPENAI_API_KEY", "")
-
-    @property
-    def model_name(self) -> str:
-        return self._model
-
-    def _client(self):
-        import openai  # type: ignore
-        return openai.OpenAI(api_key=self._api_key)
-
-    def complete(
-        self,
-        messages: List[Dict[str, str]],
-        max_tokens: int = 1024,
-        temperature: float = 0.7,
-        **kwargs: Any,
-    ) -> str:
-        response = self._client().chat.completions.create(
-            model=self._model,
+    async def invoke(self, messages: List[Dict[str, str]], temperature: float = 0.0) -> str:
+        if not self.client:
+            logger.debug(f"[Mock OpenAI] Received messages: {len(messages)}")
+            return "This is a mock response from OpenAI Provider."
+            
+        logger.info(f"Invoking {self.model_name}")
+        response = await self.client.chat.completions.create(
+            model=self.model_name,
             messages=messages,
-            max_tokens=max_tokens,
-            temperature=temperature,
-            **kwargs,
+            temperature=temperature
         )
-        return response.choices[0].message.content or ""
+        return response.choices[0].message.content
 
-    def stream(
-        self,
-        messages: List[Dict[str, str]],
-        max_tokens: int = 1024,
-        temperature: float = 0.7,
-        **kwargs: Any,
-    ) -> Iterator[str]:
-        stream = self._client().chat.completions.create(
-            model=self._model,
-            messages=messages,
-            max_tokens=max_tokens,
-            temperature=temperature,
-            stream=True,
-            **kwargs,
-        )
-        for chunk in stream:
-            delta = chunk.choices[0].delta.content
-            if delta:
-                yield delta
+    async def invoke_with_tools(self, messages: List[Dict[str, str]], tools: List[Dict[str, Any]], temperature: float = 0.0) -> Dict[str, Any]:
+        if not self.client:
+            # Return a mock representation of a parsed tool schema
+            return {"name": "mock_tool", "arguments": {}}
+            
+        # Convert custom tool representations strictly into OpenAI's required JSON schema mapping here
+        raise NotImplementedError("Tool parsing schema mapper needed for OpenAI spec.")
