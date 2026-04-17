@@ -1,4 +1,7 @@
-.PHONY: run test deploy lint format build clean
+.PHONY: install run test deploy lint format build clean
+
+install:
+	uv pip install -e .
 
 run:
 	docker-compose up
