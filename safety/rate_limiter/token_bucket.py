@@ -1,57 +1,60 @@
-"""Token bucket rate limiter (per user / per API key)."""
-from __future__ import annotations
-
-import threading
+import redis.asyncio as redis
 import time
-from dataclasses import dataclass, field
-from typing import Dict
+from typing import Optional
 
-
-@dataclass
-class _Bucket:
-    capacity: float
-    refill_rate: float  # tokens per second
-    tokens: float = field(init=False)
-    last_refill: float = field(init=False)
-
-    def __post_init__(self):
-        self.tokens = self.capacity
-        self.last_refill = time.monotonic()
-
-    def consume(self, amount: float = 1.0) -> bool:
-        now = time.monotonic()
-        elapsed = now - self.last_refill
-        self.tokens = min(self.capacity, self.tokens + elapsed * self.refill_rate)
-        self.last_refill = now
-
-        if self.tokens >= amount:
-            self.tokens -= amount
-            return True
-        return False
-
-
-class TokenBucketLimiter:
+class TokenBucketRateLimiter:
     """
-    Per-identity (user_id or IP) token bucket rate limiter.
-
-    Example:
-        limiter = TokenBucketLimiter(capacity=60, refill_rate=1.0)
-        if not limiter.allow("user-123"):
-            raise HTTPException(429, "Rate limit exceeded")
+    Redis-backed atomic token bucket rate limiter using Lua scripting.
+    Ensures thread-safety and scalability across multiple API instances.
     """
+    def __init__(self, redis_url: str, default_tokens: int = 10, default_refill_rate: float = 1.0):
+        self.redis = redis.from_url(redis_url, decode_responses=True)
+        self.default_tokens = default_tokens
+        self.default_refill_rate = default_refill_rate
 
-    def __init__(self, capacity: float = 60.0, refill_rate: float = 1.0):
-        self._capacity = capacity
-        self._refill_rate = refill_rate
-        self._buckets: Dict[str, _Bucket] = {}
-        self._lock = threading.Lock()
+        # Lua script: consume tokens atomically
+        self.consume_script = """
+        local key = KEYS[1]
+        local now = tonumber(ARGV[1])
+        local requested = tonumber(ARGV[2])
+        local capacity = tonumber(ARGV[3])
+        local refill_rate = tonumber(ARGV[4])
 
-    def allow(self, identity: str, cost: float = 1.0) -> bool:
-        with self._lock:
-            if identity not in self._buckets:
-                self._buckets[identity] = _Bucket(self._capacity, self._refill_rate)
-            return self._buckets[identity].consume(cost)
+        local bucket = redis.call('hmget', key, 'tokens', 'last_refill')
+        local tokens = tonumber(bucket[1])
+        local last_refill = tonumber(bucket[2])
 
-    def reset(self, identity: str) -> None:
-        with self._lock:
-            self._buckets.pop(identity, None)
+        if tokens == nil then
+            tokens = capacity
+            last_refill = now
+        end
+
+        local elapsed = now - last_refill
+        local new_tokens = math.min(capacity, tokens + elapsed * refill_rate)
+
+        if new_tokens >= requested then
+            new_tokens = new_tokens - requested
+            redis.call('hmset', key, 'tokens', new_tokens, 'last_refill', now)
+            redis.call('expire', key, 3600)  -- expire after 1h idle
+            return 1
+        else
+            return 0
+        end
+        """
+
+    async def consume(self, client_id: str, tokens: int = 1) -> bool:
+        """
+        Consumes tokens for a given client_id. Returns True if allowed, False otherwise.
+        """
+        now = time.time()
+        key = f"rate_limit:{client_id}"
+        result = await self.redis.eval(
+            self.consume_script,
+            1,
+            key,
+            now,
+            tokens,
+            self.default_tokens,
+            self.default_refill_rate
+        )
+        return bool(result)
