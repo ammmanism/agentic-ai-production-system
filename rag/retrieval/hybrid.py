@@ -58,30 +58,28 @@ class BM25:
 # Hybrid retriever
 # ---------------------------------------------------------------------------
 
-def hybrid_search(
-    query: str,
-    dense_results: List[Dict[str, Any]],
-    sparse_scores: List[float],
-    alpha: float = 0.7,
-) -> List[Dict[str, Any]]:
+def reciprocal_rank_fusion(
+    dense_results: List[dict],
+    sparse_results: List[dict],
+    alpha: float = 0.5,
+    k: int = 60
+) -> List[dict]:
     """
-    Combine dense (vector) and sparse (BM25) scores via linear interpolation.
-
-    alpha=1.0 → pure dense; alpha=0.0 → pure sparse.
+    RRF fusion of dense and sparse result ranks.
+    dense_results, sparse_results: lists containing {"id": doc_id, ...}
+    alpha: weight for dense (1-alpha for sparse)
+    k: constant to avoid division by zero
     """
-    logger.debug(f"Executing hybrid fusion with alpha={alpha} for query: {query}")
-    if len(dense_results) != len(sparse_scores):
-        raise ValueError("dense_results and sparse_scores must have the same length")
+    logger.debug(f"Executing RRF hybrid fusion with alpha={alpha}")
+    scores = {}
+    
+    for rank, doc in enumerate(dense_results):
+        doc_id = doc["id"]
+        scores[doc_id] = scores.get(doc_id, 0) + alpha / (k + rank + 1)
 
-    max_dense = max((r.get("score", 0.0) for r in dense_results), default=1.0)
-    max_sparse = max(sparse_scores, default=1.0)
+    for rank, doc in enumerate(sparse_results):
+        doc_id = doc["id"]
+        scores[doc_id] = scores.get(doc_id, 0) + (1 - alpha) / (k + rank + 1)
 
-    combined = []
-    for result, sparse in zip(dense_results, sparse_scores):
-        dense_norm = result.get("score", 0.0) / (max_dense or 1.0)
-        sparse_norm = sparse / (max_sparse or 1.0)
-        combined_score = alpha * dense_norm + (1 - alpha) * sparse_norm
-        combined.append({**result, "combined_score": combined_score})
-
-    combined.sort(key=lambda x: x["combined_score"], reverse=True)
-    return combined
+    sorted_docs = sorted(scores.items(), key=lambda x: x[1], reverse=True)
+    return [{"id": doc_id, "fusion_score": score} for doc_id, score in sorted_docs]
