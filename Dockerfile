@@ -1,5 +1,5 @@
 # Build stage
-FROM python:3.11-slim AS builder
+FROM python:3.14-slim AS builder
 
 WORKDIR /app
 
@@ -20,7 +20,7 @@ COPY pyproject.toml .
 RUN uv pip install --no-cache .
 
 # Runtime stage
-FROM python:3.11-slim
+FROM python:3.14-slim
 
 # Create a non-root user for security
 RUN useradd -m -U appuser
