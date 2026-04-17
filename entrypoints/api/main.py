@@ -5,8 +5,8 @@ import time
 import logging
 
 from entrypoints.api.routes import chat, ingest, feedback, health
-from safety.rate_limiter.token_bucket import TokenBucketRateLimiter
-from entrypoints.api.middleware.request_id import RequestIDMiddleware
+from safety.rate_limiter.token_bucket import TokenBucketLimiter
+from entrypoints.api.middleware.request_id import RequestIdMiddleware
 
 logger = logging.getLogger(__name__)
 
@@ -18,7 +18,7 @@ async def lifespan(app: FastAPI):
     start_time = time.time()
     
     # Initialize Rate Limiter globally accessible via app state
-    app.state.rate_limiter = TokenBucketRateLimiter(points=100, interval=60)
+    app.state.rate_limiter = TokenBucketLimiter(capacity=100.0, refill_rate=60.0)
     
     logger.info(f"System ready in {time.time() - start_time:.2f}s")
     yield
@@ -35,7 +35,7 @@ app = FastAPI(
 )
 
 # Custom Middlewares
-app.add_middleware(RequestIDMiddleware)
+app.add_middleware(RequestIdMiddleware)
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],  # Production needs explicit origins
@@ -48,9 +48,9 @@ app.add_middleware(
 app.include_router(health.router, tags=["Health"])
 app.include_router(chat.router, prefix="/api/v1/chat", tags=["Agent Chat"])
 
-# To be fully populated with real logic later
-# app.include_router(ingest.router, prefix="/api/v1/ingest", tags=["Document Ingestion"])
-# app.include_router(feedback.router, prefix="/api/v1/feedback", tags=["Human Feedback"])
+# Full Production Endpoints
+app.include_router(ingest.router, prefix="/api/v1/ingest", tags=["Document Ingestion"])
+app.include_router(feedback.router, prefix="/api/v1/feedback", tags=["Human Feedback"])
 
 @app.get("/")
 async def root():
