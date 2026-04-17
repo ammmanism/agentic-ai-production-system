@@ -5,7 +5,8 @@ import time
 import logging
 
 from entrypoints.api.routes import chat, ingest, feedback, health
-from safety.rate_limiter.token_bucket import TokenBucketLimiter
+from core.config import settings
+from entrypoints.api.middleware.rate_limit import RateLimitMiddleware, get_rate_limiter
 from entrypoints.api.middleware.request_id import RequestIdMiddleware
 
 logger = logging.getLogger(__name__)
@@ -18,7 +19,7 @@ async def lifespan(app: FastAPI):
     start_time = time.time()
     
     # Initialize Rate Limiter globally accessible via app state
-    app.state.rate_limiter = TokenBucketLimiter(capacity=100.0, refill_rate=60.0)
+    app.state.rate_limiter = get_rate_limiter()
     
     logger.info(f"System ready in {time.time() - start_time:.2f}s")
     yield
