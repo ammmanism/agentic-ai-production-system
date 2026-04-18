@@ -1,36 +1,16 @@
-"""Agent state definition using TypedDict for LangGraph."""
-from typing import Any, Dict, List, Optional, TypedDict
-
+from typing import TypedDict, Annotated, List, Optional, Any
+from langchain_core.messages import BaseMessage
+import operator
 
 class AgentState(TypedDict):
-    """Typed state for the agent graph."""
-
-    # The original user query
-    query: str
-
-    # Chat history as list of dicts with role/content
-    messages: List[Dict[str, str]]
-
-    # Plan produced by the planner node
-    plan: Optional[List[str]]
-
-    # Current step index in the plan
-    current_step: int
-
-    # Results from each tool / executor step
-    tool_results: List[Dict[str, Any]]
-
-    # Final synthesised answer
-    final_answer: Optional[str]
-
-    # Signal for reflector: should we replan?
-    needs_replan: bool
-
-    # Number of replanning cycles (prevents infinite loops)
-    replan_count: int
-
-    # Retrieved RAG context
-    context: Optional[str]
-
-    # Metadata: model used, cost, latency …
-    metadata: Dict[str, Any]
+    """
+    Type-safe execution state mapped exactly to the LangGraph node boundaries.
+    """
+    messages: Annotated[List[BaseMessage], operator.add]
+    session_id: str
+    current_thought: Optional[str]
+    retrieved_context: Optional[List[dict]]
+    tool_calls: Optional[List[dict]]
+    error: Optional[str]
+    is_summarized: bool
+    flops_estimate: float
