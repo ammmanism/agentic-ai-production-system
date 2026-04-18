@@ -1,5 +1,7 @@
 from pydantic_settings import BaseSettings, SettingsConfigDict
+from pydantic import model_validator
 from typing import Optional
+from core.exceptions import ConfigurationError
 
 class Settings(BaseSettings):
     # API Settings
@@ -20,5 +22,11 @@ class Settings(BaseSettings):
     QDRANT_URL: str = "http://localhost:6333"
     
     model_config = SettingsConfigDict(env_file=".env", case_sensitive=True)
+
+    @model_validator(mode='after')
+    def validate_api_keys(self) -> 'Settings':
+        if not self.OPENAI_API_KEY and not self.ANTHROPIC_API_KEY and not self.VLLM_ENDPOINT:
+            raise ConfigurationError("At least one LLM Provider must be configured (OpenAI, Anthropic, or vLLM).")
+        return self
 
 settings = Settings()
