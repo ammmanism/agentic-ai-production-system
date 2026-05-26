@@ -83,3 +83,30 @@ def reciprocal_rank_fusion(
 
     sorted_docs = sorted(scores.items(), key=lambda x: x[1], reverse=True)
     return [{"id": doc_id, "fusion_score": score} for doc_id, score in sorted_docs]
+
+
+def hybrid_search(
+    query: str,
+    dense_results: List[dict],
+    sparse_scores: List[float],
+    alpha: float = 0.5,
+) -> List[dict]:
+    """
+    Combines dense results with sparse scores.
+    dense_results is a list of dicts.
+    sparse_scores is a list of floats matching the index/length of dense_results or documents.
+    """
+    fused = []
+    for idx, doc in enumerate(dense_results):
+        dense_score = doc.get("score", doc.get("dense_score", 1.0))
+        sparse_score = sparse_scores[idx] if idx < len(sparse_scores) else 0.0
+        fused_score = alpha * dense_score + (1.0 - alpha) * sparse_score
+        
+        doc_copy = dict(doc)
+        doc_copy["score"] = fused_score
+        if "payload" not in doc_copy:
+            doc_copy["payload"] = {"text": doc_copy.get("text", "")}
+        fused.append(doc_copy)
+        
+    fused.sort(key=lambda x: x["score"], reverse=True)
+    return fused
