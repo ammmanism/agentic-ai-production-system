@@ -10,7 +10,7 @@ from orchestration.graph.compiler import get_agent_graph
 router = APIRouter()
 logger = logging.getLogger(__name__)
 
-async def stream_agent_events(query: str, session_id: str) -> AsyncGenerator[str, None]:
+async def stream_agent_events(query: str, session_id: str, request: Request) -> AsyncGenerator[str, None]:
     """Streams Server-Sent Events (SSE) from the LangGraph execution."""
     graph = get_agent_graph()
     
@@ -24,6 +24,9 @@ async def stream_agent_events(query: str, session_id: str) -> AsyncGenerator[str
     try:
         # Asynchronous stream over the langgraph state machine
         async for event in graph.astream(state, {"configurable": {"thread_id": session_id}}):
+            if await request.is_disconnected():
+                logger.warning(f"Client disconnected for session {session_id}. Aborting stream.")
+                break
             # The event dict represents the state output of the last executed node
             # Format as SSE
             yield f"data: {json.dumps(event)}\n\n"
@@ -35,16 +38,15 @@ async def stream_agent_events(query: str, session_id: str) -> AsyncGenerator[str
         yield f"event: error\ndata: {json.dumps({'message': str(e)})}\n\n"
 
 @router.post("/stream")
-async def chat_stream(request: ChatRequest):
+async def chat_stream(request_body: ChatRequest, request: Request):
     """
     Agent chat endpoint that streams reasoning steps and the final answer.
     """
-    if not request.query:
+    if not request_body.query:
         raise HTTPException(status_code=400, detail="Query cannot be empty.")
         
     return StreamingResponse(
-        stream_agent_events(request.query, request.session_id),
+        stream_agent_events(request_body.query, request_body.session_id, request),
         media_type="text/event-stream"
     )
 
-    )
