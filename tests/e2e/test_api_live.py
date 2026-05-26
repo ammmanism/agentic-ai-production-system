@@ -22,13 +22,13 @@ def _post(path: str, json: dict):
 def test_health_check():
     resp = _get("/health")
     assert resp.status_code == 200
-    assert resp.json()["status"] == "ok"
+    assert resp.json()["status"] == "healthy"
 
 
 @pytest.mark.e2e
 def test_chat_endpoint():
     resp = _post(
-        "/chat/stream",
+        "/api/v1/chat/stream",
         {
             "session_id": "e2e-test-session",
             "query": "What is 2 + 2?",
@@ -44,7 +44,7 @@ def test_chat_endpoint():
 @pytest.mark.e2e
 def test_ingest_endpoint():
     resp = _post(
-        "/ingest",
+        "/api/v1/ingest",
         {
             "documents": [{"id": "1", "text": "Test document", "metadata": {}}],
             "collection": "e2e-test",
