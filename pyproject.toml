@@ -14,6 +14,10 @@ dependencies = [
     "redis>=5.0",
     "tiktoken>=0.5",
     "uvicorn>=0.29.0",
+    "pydantic-settings>=2.0",
+    "requests>=2.31.0",
+    "click>=8.0",
+    "streamlit>=1.30.0",
 ]
 
 [project.scripts]
@@ -31,6 +35,10 @@ target-version = "py311"
 select = ["E", "F", "UP", "B", "SIM", "I"]
 ignore = []
 
+[tool.ruff.lint.per-file-ignores]
+"tests/**/*.py" = ["F401", "F811", "E501"]
+"scripts/**/*.py" = ["E501"]
+
 [tool.mypy]
 strict = true
 warn_return_any = true
@@ -41,3 +49,10 @@ disallow_untyped_decorators = true
 no_implicit_optional = true
 warn_redundant_casts = true
 warn_unused_ignores = true
+
+[tool.pytest.ini_options]
+markers = [
+    "e2e: end-to-end API live integration tests",
+]
+asyncio_mode = "auto"
+asyncio_default_fixture_loop_scope = "function"
