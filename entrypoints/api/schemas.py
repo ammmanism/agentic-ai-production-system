@@ -28,7 +28,7 @@ class ChatResponse(BaseModel):
 # ---------------------------------------------------------------------------
 
 class IngestRequest(BaseModel):
-    documents: List[Dict[str, str]] = Field(
+    documents: List[Dict[str, Any]] = Field(
         ..., description="List of {id, text, metadata} dicts"
     )
     collection: str = Field(default="default")
