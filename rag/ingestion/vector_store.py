@@ -53,7 +53,7 @@ class VectorStore:
         if self._client is None:
             for i, (vid, vec) in enumerate(zip(ids, vectors)):
                 self._stub_store.append(
-                    {"id": vid, "vector": vec, "payload": (payloads or [{}])[i]}
+                    {"id": vid, "vector": vec, "payload": payloads[i] if payloads else {}}
                 )
             return
 
@@ -63,7 +63,7 @@ class VectorStore:
             PointStruct(
                 id=vid,
                 vector=vec,
-                payload=(payloads or [{}])[i],
+                payload=payloads[i] if payloads else {},
             )
             for i, (vid, vec) in enumerate(zip(ids, vectors))
         ]
