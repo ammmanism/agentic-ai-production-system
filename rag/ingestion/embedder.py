@@ -25,6 +25,6 @@ class SentenceEmbedder:
         # Placeholder for actual model inference
         # e.g., model.encode(texts, batch_size=self.batch_size)
         
-        # Mocking 768-D vectors
-        mock_dim = 768
+        # Mocking 1536-D vectors (aligns with Qdrant size)
+        mock_dim = 1536
         return np.random.normal(0, 1, size=(len(texts), mock_dim)).tolist()
