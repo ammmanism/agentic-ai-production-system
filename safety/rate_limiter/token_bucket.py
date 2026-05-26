@@ -1,6 +1,9 @@
 import redis.asyncio as redis
 import time
+import logging
 from typing import Optional
+
+logger = logging.getLogger(__name__)
 
 class TokenBucketRateLimiter:
     """
@@ -45,16 +48,54 @@ class TokenBucketRateLimiter:
     async def consume(self, client_id: str, tokens: int = 1) -> bool:
         """
         Consumes tokens for a given client_id. Returns True if allowed, False otherwise.
+        Falls back to local in-memory limiter if Redis is unavailable.
         """
+        try:
+            now = time.time()
+            key = f"rate_limit:{client_id}"
+            result = await self.redis.eval(
+                self.consume_script,
+                1,
+                key,
+                now,
+                tokens,
+                self.default_tokens,
+                self.default_refill_rate
+            )
+            return bool(result)
+        except Exception as e:
+            logger.warning(f"Redis rate limiting failed: {e}. Falling back to in-memory limiter.")
+            if not hasattr(self, "_fallback_limiter"):
+                self._fallback_limiter = TokenBucketLimiter(
+                    capacity=float(self.default_tokens),
+                    refill_rate=self.default_refill_rate
+                )
+            return self._fallback_limiter.allow(client_id)
+
+class TokenBucketLimiter:
+    """
+    In-memory token bucket rate limiter for local tests and simple rate limiting.
+    """
+    def __init__(self, capacity: float, refill_rate: float):
+        self.capacity = capacity
+        self.refill_rate = refill_rate
+        self.buckets = {}
+
+    def allow(self, client_id: str) -> bool:
         now = time.time()
-        key = f"rate_limit:{client_id}"
-        result = await self.redis.eval(
-            self.consume_script,
-            1,
-            key,
-            now,
-            tokens,
-            self.default_tokens,
-            self.default_refill_rate
-        )
-        return bool(result)
+        if client_id not in self.buckets:
+            tokens = self.capacity
+            last_refill = now
+        else:
+            tokens, last_refill = self.buckets[client_id]
+            elapsed = now - last_refill
+            tokens = min(self.capacity, tokens + elapsed * self.refill_rate)
+            last_refill = now
+
+        if tokens >= 1.0:
+            tokens -= 1.0
+            self.buckets[client_id] = (tokens, last_refill)
+            return True
+        else:
+            self.buckets[client_id] = (tokens, last_refill)
+            return False
