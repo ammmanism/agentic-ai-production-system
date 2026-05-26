@@ -49,6 +49,17 @@ app.add_middleware(
 app.include_router(health.router, tags=["Health"])
 app.include_router(chat.router, prefix="/api/v1/chat", tags=["Agent Chat"])
 
+from fastapi.exceptions import RequestValidationError
+from fastapi.responses import JSONResponse
+
+@app.exception_handler(RequestValidationError)
+async def validation_exception_handler(request, exc):
+    logger.error(f"Validation failed for path {request.url.path}: {exc}")
+    return JSONResponse(
+        status_code=422,
+        content={"detail": exc.errors(), "message": "Request validation failed"}
+    )
+
 # Full Production Endpoints
 app.include_router(ingest.router, prefix="/api/v1/ingest", tags=["Document Ingestion"])
 app.include_router(feedback.router, prefix="/api/v1/feedback", tags=["Human Feedback"])
