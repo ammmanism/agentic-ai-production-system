@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import logging
+import math
 import os
 from typing import Any, Dict, List, Optional
 
@@ -72,8 +73,33 @@ class VectorStore:
     def search(self, query_vector: List[float], top_k: int = 5) -> List[Dict[str, Any]]:
         """Return the top-k nearest neighbours."""
         if self._client is None:
-            # Stub: return first top_k items
-            return self._stub_store[:top_k]
+            # Fallback: calculate cosine similarity for in-memory store
+            scored_results = []
+            
+            # Compute query norm once
+            norm_q = math.sqrt(sum(q * q for q in query_vector))
+            
+            for item in self._stub_store:
+                vec = item.get("vector")
+                if not vec or norm_q == 0:
+                    continue
+                    
+                norm_v = math.sqrt(sum(v * v for v in vec))
+                if norm_v == 0:
+                    continue
+                    
+                dot_product = sum(q * v for q, v in zip(query_vector, vec))
+                score = dot_product / (norm_q * norm_v)
+                
+                scored_results.append({
+                    "id": item["id"],
+                    "score": score,
+                    "payload": item.get("payload", {})
+                })
+                
+            # Sort by score descending
+            scored_results.sort(key=lambda x: x["score"], reverse=True)
+            return scored_results[:top_k]
 
         results = self._client.search(
             collection_name=self._collection,
