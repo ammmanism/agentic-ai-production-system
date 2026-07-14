@@ -42,4 +42,15 @@ Thumbs.db
 *.db
 scripts/gen_nb_*.py
 __pycache__/
-.ipynb_checkpoints/
+.ipynb_checkpoints/__pycache__/
+*.pyc
+.venv/
+venv/
+.env
+.mypy_cache/
+.ruff_cache/
+.pytest_cache/
+node_modules/
+.next/
+dist/
+*.log
